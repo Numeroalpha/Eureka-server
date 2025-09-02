@@ -1,4 +1,15 @@
-FROM openjdk:17-jdk-slim-buster 
-VOLUME /tmp 
-COPY target/wavexc-discovery-service-0.0.1-SNAPSHOT.jar discovery-service.jar 
+# Stage 1: Build stage
+FROM maven:3.9.2-eclipse-temurin-17 AS builder
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Stage 2: Runtime stage
+FROM openjdk:17-jdk-slim-buster
+WORKDIR /app
+
+# Copy the jar from build stage
+COPY --from=builder /app/target/discovery-service-0.0.1-SNAPSHOT.jar discovery-service.jar
+
 ENTRYPOINT ["java","-jar","discovery-service.jar"]
